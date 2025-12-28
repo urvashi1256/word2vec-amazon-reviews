@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Word2Vec Similar Words</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 50px auto; padding: 20px; }
+        input { padding: 10px; width: 200px; font-size: 16px; }
+        button { padding: 10px 20px; font-size: 16px; margin-left: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #result { margin-top: 30px; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 12px; background: #f8f9fa; margin: 8px 0; border-radius: 6px; border-left: 4px solid #007bff; }
+        .error { color: #dc3545; background: #f8d7da; padding: 12px; border-radius: 6px; border-left: 4px solid #dc3545; }
+        h1 { color: #007bff; }
+    </style>
+</head>
+<body>
+    <h1>Find Similar Words</h1>
+    <p>Enter a word to find similar words from cell phone reviews:</p>
+    
+    <input type="text" id="wordInput" placeholder="e.g., good, battery, screen" value="good">
+    <button onclick="findSimilar()">Find Similar Words</button>
+    
+    <div id="result"></div>
+
+    <script>
+        async function findSimilar() {
+            const word = document.getElementById("wordInput").value.trim();
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = '<p>🔍 Searching...</p>';
+
+            try {
+                const resp = await fetch(`/similar?word=${encodeURIComponent(word)}&topn=10`);
+                const data = await resp.json();
+
+                if (!resp.ok) {
+                    resultDiv.innerHTML = `<p class="error">❌ ${data.error}</p>`;
+                    return;
+                }
+
+                let html = `<h3>Similar to "${data.query}":</h3><ul>`;
+                data.results.forEach(item => {
+                    html += `<li>${item.word} <strong>(${item.score.toFixed(3)})</strong></li>`;
+                });
+                html += '</ul>';
+                resultDiv.innerHTML = html;
+            } catch (e) {
+                resultDiv.innerHTML = '<p class="error">❌ Server error. Make sure backend is running on port 5000.</p>';
+            }
+        }
+
+        document.getElementById("wordInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") findSimilar();
+        });
+    </script>
+</body>
+</html>
